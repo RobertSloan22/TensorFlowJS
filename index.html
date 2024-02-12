@@ -216,8 +216,20 @@
         <h1 class="display-5 fw-bold">TensorFlow.js Transfer Learning Demo: Robert Sloan</h1>
         
    
-    <h1>Deep Neural Network In the Browser Runtime STATUS DISPLAYED BELOW-- AFTER GATHERING DATA FOR BOTH ITEMS - CLICK TRAIN AND PREDICT - WAIT 20 SECONDS AND THEN PREDICTION IS DISPLAYED BELOW</h1>    
-    <p id="status">Awaiting TF.js load</p>
+    <h1>Deep Neural Network In the Browser</h1>    
+
+
+
+        <p id="status">Awaiting TF.js load <span id="loadingIndicator" style="visibility: hidden;">🔄</span></p>
+
+<!-- For Class 1 -->
+<button id="collectClass1" class="btn btn-primary btn-lg">Collect Class 1 Data</button>
+<button id="stopCollectClass1" class="btn btn-secondary btn-lg" style="display: none;">Stop Collecting Class 1 Data</button>
+
+<!-- For Class 2 -->
+<button id="collectClass2" class="btn btn-primary btn-lg">Collect Class 2 Data</button>
+<button id="stopCollectClass2" class="btn btn-secondary btn-lg" style="display: none;">Stop Collecting Class 2 Data</button>
+
     <div id="container">
     <video id="webcam" autoplay muted playsinline></video>
 
@@ -264,6 +276,50 @@
     </footer>
   </div>
   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  // Show loading indicator
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  loadingIndicator.style.visibility = 'visible';
+
+  // TensorFlow.js load check
+  if (typeof tf !== 'undefined') {
+    console.log('TensorFlow.js loaded successfully');
+    document.getElementById('status').textContent = 'TF.js Loaded';
+    loadingIndicator.style.visibility = 'hidden';
+  } else {
+    console.error('Failed to load TensorFlow.js');
+  }
+});
+
+// Event listeners for collect and stop buttons
+document.getElementById('collectClass1').addEventListener('click', function() {
+  startCollectingData(0); // Assuming 0 is the identifier for Class 1
+});
+document.getElementById('stopCollectClass1').addEventListener('click', function() {
+  stopCollectingData(0);
+});
+
+document.getElementById('collectClass2').addEventListener('click', function() {
+  startCollectingData(1); // Assuming 1 is the identifier for Class 2
+});
+document.getElementById('stopCollectClass2').addEventListener('click', function() {
+  stopCollectingData(1);
+});
+
+function startCollectingData(classId) {
+  console.log(`Start collecting data for class ${classId}`);
+  document.getElementById(`collectClass${classId + 1}`).style.display = 'none';
+  document.getElementById(`stopCollectClass${classId + 1}`).style.display = 'inline-block';
+  // Add data collection logic here
+}
+
+function stopCollectingData(classId) {
+  console.log(`Stop collecting data for class ${classId}`);
+  document.getElementById(`collectClass${classId + 1}`).style.display = 'inline-block';
+  document.getElementById(`stopCollectClass${classId + 1}`).style.display = 'none';
+  // Add logic to stop data collection here
+}
+
   const STATUS = document.getElementById('status');
   const VIDEO = document.getElementById('webcam');
   const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
