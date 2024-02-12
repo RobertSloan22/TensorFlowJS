@@ -269,6 +269,19 @@
   const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
 
   ENABLE_CAM_BUTTON.addEventListener('click', enableCam);
+function loadTensorFlowJS() {
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js';
+  script.async = true;
+  script.onload = function() {
+    // TensorFlow.js loaded
+    console.log('TensorFlow.js loaded successfully');
+  };
+  document.head.appendChild(script);
+}
+
+// Call the function at an appropriate time (e.g., after your page has loaded)
+window.onload = loadTensorFlowJS;
 
   // Checks if the browser supports the necessary API for video capture
   function hasGetUserMedia() {
@@ -276,13 +289,26 @@
   }
 
   // Tries to enable the camera
-  function enableCam() {
-    if (hasGetUserMedia()) {
-      // Constraints for the video stream
-      // iOS requires specific constraints, especially facingMode for front/back camera
-      const constraints = {
-        video: { facingMode: 'user', width: 640, height: 480 } // Use 'environment' for rear camera
-      };
+function enableCam() {
+  if (hasGetUserMedia()) {
+    // Change facingMode to 'environment' to use the rear camera.
+    const constraints = {
+      video: { facingMode: 'environment', width: 640, height: 480 }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+      VIDEO.srcObject = stream;
+      VIDEO.addEventListener('loadeddata', function() {
+        // Additional checks or actions once the video stream is available
+      });
+    }).catch(function(error) {
+      console.error('Camera access denied:', error);
+    });
+  } else {
+    console.warn('getUserMedia() is not supported by your browser');
+  }
+}
+
 
       // Activate the webcam stream.
       navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
