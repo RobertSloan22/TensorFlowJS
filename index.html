@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>TensorFlowJS</title>
 
@@ -40,6 +41,37 @@
         .bd-placeholder-img-lg {
           font-size: 3.5rem;
         }
+            }
+      /* Base styles here */
+      
+      /* Responsive styles */
+      @media (max-width: 768px) {
+        body {
+          font-size: 14px;
+        }
+      
+        .container {
+          padding: 20px;
+      }
+    
+  /* Adjust layout, font sizes, and more for smaller screens */
+    }
+            .container {
+        width: 100%;
+        max-width: 1200px; /* or any maximum size */
+        margin: 0 auto; /* centers the layout */
+      }
+      
+      .column {
+        float: left;
+        width: 50%; /* Example: for 2 columns layout */
+      }
+      
+      /* Clearfix for floating elements */
+      .row::after {
+        content: "";
+        clear: both;
+        display: table;
       }
 
       .b-example-divider {
@@ -55,6 +87,16 @@
         flex-shrink: 0;
         width: 1.5rem;
         height: 100vh;
+      }
+            img, video {
+        max-width: 100%;
+        height: auto;
+            }
+              @media (max-width: 768px) {
+        body {
+          font-size: 16px;
+          line-height: 1.5;
+        }
       }
 
       .bi {
