@@ -222,6 +222,45 @@
     </footer>
   </div>
   <script>
+  const STATUS = document.getElementById('status');
+  const VIDEO = document.getElementById('webcam');
+  const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
+
+  ENABLE_CAM_BUTTON.addEventListener('click', enableCam);
+
+  // Checks if the browser supports the necessary API for video capture
+  function hasGetUserMedia() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  }
+
+  // Tries to enable the camera
+  function enableCam() {
+    if (hasGetUserMedia()) {
+      // Constraints for the video stream
+      // iOS requires specific constraints, especially facingMode for front/back camera
+      const constraints = {
+        video: { facingMode: 'user', width: 640, height: 480 } // Use 'environment' for rear camera
+      };
+
+      // Activate the webcam stream.
+      navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+        VIDEO.srcObject = stream;
+        VIDEO.addEventListener('loadeddata', function() {
+          // Additional checks or actions once the video stream is available
+        });
+      }).catch(function(error) {
+        console.error('Camera access denied:', error);
+        // Handle errors or inform the user they need to give permission
+      });
+    } else {
+      console.warn('getUserMedia() is not supported by your browser');
+      // Provide fallback or inform the user that their device/browser is not supported
+    }
+  }
+
+</script>
+
+  <script>
     const STATUS = document.getElementById('status');
       const VIDEO = document.getElementById('webcam');
       const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
