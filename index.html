@@ -166,67 +166,30 @@
         <h1 class="display-5 fw-bold">TensorFlow.js Transfer Learning Demo: Robert Sloan</h1>
         
    
-    <h2>Deep Neural Network In the Browser   
-
-
+    <h2>Deep Neural Network In the Browser</h2>   
 
 <div class="d-flex align-items-center" id="status">
   <strong role="status">Awaiting TF.js load</strong>
   <div class="spinner-border ms-auto" id="loadingIndicator" style="visibility: visible;" role="status" aria-hidden="false"></div>
 </div>
-</h2>    
-<div id="container">
-    
+   
+<div id="container" class="mt-4">
   <video id="webcam" autoplay muted playsinline></video>
+</div>
 
-    </div>
-    <div>
-    <button id="enableCam" class="btn btn-primary btn-lg">Enable Webcam</button>
-    </div>
-  <span>then</span>
+<div class="mt-4">
+  <button id="enableCam" class="btn btn-success btn-lg w-100">Enable Webcam</button>
+</div>
 
-<br>
-    <button class="dataCollector" class="btn btn-primary btn-lg" data-1hot="0" data-name="Class 1">Gather Class 1 Data</button>
-    <br>
-    then
-    <br>
-    <button class="dataCollector" class="btn btn-primary btn-lg" data-1hot="1" data-name="Class 2">Gather Class 2 Data</button>
-    <br>
-    <span>then</span>
-          
-  <br>  
-    <button id="train" class="btn btn-primary btn-lg">Train &amp; Predict!</button>
-    <br>
-    <span>then</span>
-  <br>
-    <button id="reset" class="btn btn-primary btn-lg">Reset</button>
-    <!-- bootstrap5 cdn-->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <!-- Import TensorFlow.js library -->
+<div class="mt-3 text-center">
+  <button class="dataCollector btn btn-primary btn-lg w-100 mb-3" data-1hot="0" data-name="Class 1">Gather Class 1 Data</button>
+  <button class="dataCollector btn btn-primary btn-lg w-100 mb-3" data-1hot="1" data-name="Class 2">Gather Class 2 Data</button>
+  <button id="train" class="btn btn-warning btn-lg w-100 mb-3">Train &amp; Predict!</button>
+  <button id="reset" class="btn btn-danger btn-lg w-100">Reset</button>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    <!-- Import the page's JavaScript to do some stuff -->
-        <p class="col-md-8 fs-4">Training takes 10/15sec - If your on a mobile device and datacollection wont stop, Just Click the enable Web cam button once to halt collection. " Fix coming soon"</p>
-      </div>
-    </div>
+<p class="mt-4 text-muted">Training takes 10-15 seconds. Hold down the gather buttons to collect data.</p>
 
-    <div class="row align-items-md-stretch">
-      <div class="col-md-6">
-        <div class="h-100 p-5 text-bg-dark rounded-3">
-          <h2>Number Prediction Model </h2>
-          <div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/dc6b89bcc0ab4fef8fe0080e4486d0ac?sid=f8813885-798d-4c10-b9ae-5e3f2ffb8d41" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
-          <button class="btn btn-outline-light" type="button">Activate</button>
-        </div>
-      </div>
-      
-      <div class="col-md-6">
-        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-          <h2>Chat With PDF </h2>
-
-          <p>.</p>
-          <button class="btn btn-outline-secondary" type="button">Activate</button>
-        </div>
       </div>
     </div>
 
@@ -234,410 +197,118 @@
       &copy; 2023
     </footer>
   </div>
-  <script>
-document.getElementById('train').addEventListener('click', function() {
-  this.innerHTML = `
-    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-    <span role="status">Loading...</span>
-  `;
-  this.disabled = true;
-  setTimeout (() => {
-    this.innerHTML = 'Train & Predict!';
-    this.disabled = false;
-  }, 10000);
-});
-
-document.querySelectorAll('.dataCollector').forEach(button => {
-  button.addEventListener('click', () => {
-    if (button.classList.contains('active')) {
-      startDataCollection(button);
-    } else {
-      stopDataCollection(button);
-    }
-  });
- 
-function startDataCollection(button) {
-  const dataName = button.getAttribute('data-name');
-  // Assuming you have a function named startCollection in your script tag
-  startCollection(dataName);
-}
-
-function stopDataCollection(button) {
-  const dataName = button.getAttribute('data-name');
-  // Assuming you have a function named stopCollection in your script tag
-  stopCollection(dataName);
-}
-
-
-    document.addEventListener('DOMContentLoaded', function() {
-  // Show loading indicator
-  const loadingIndicator = document.getElementById('loadingIndicator');
-  loadingIndicator.style.visibility = 'visible';
-
-  // TensorFlow.js load check
-  if (typeof tf !== 'undefined') {
-    console.log('TensorFlow.js loaded successfully');
-    document.getElementById('status').textContent = 'TF.js Loaded';
-    loadingIndicator.style.visibility = 'hidden';
-  } else {
-    console.error('Failed to load TensorFlow.js');
-  }
-});
-
-// Event listeners for collect and stop buttons
-document.getElementById('collectClass1').addEventListener('click', function() {
-  startCollectingData(0); // Assuming 0 is the identifier for Class 1
-});
-document.getElementById('stopCollectClass1').addEventListener('click', function() {
-  stopCollectingData(0);
-});
-
-document.getElementById('collectClass2').addEventListener('click', function() {
-  startCollectingData(1); // Assuming 1 is the identifier for Class 2
-});
-document.getElementById('stopCollectClass2').addEventListener('click', function() {
-  stopCollectingData(1);
-});
-
-function startCollectingData(classId) {
-  console.log(`Start collecting data for class ${classId}`);
-  document.getElementById(`collectClass${classId + 1}`).style.display = 'none';
-  document.getElementById(`stopCollectClass${classId + 1}`).style.display = 'inline-block';
-  // Add data collection logic here
-}
-
-function stopCollectingData(classId) {
-  console.log(`Stop collecting data for class ${classId}`);
-  document.getElementById(`collectClass${classId + 1}`).style.display = 'inline-block';
-  document.getElementById(`stopCollectClass${classId + 1}`).style.display = 'none';
-  // Add logic to stop data collection here
-}
-
-
-ENABLE_CAM_BUTTON.addEventListener('click', enableCam);
-function loadTensorFlowJS() {
-  var script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js';
-  script.async = true;
-  script.onload = function() {
-    // TensorFlow.js loaded
-    console.log('TensorFlow.js loaded successfully');
-  };
-  document.head.appendChild(script);
-}
-
-// Call the function at an appropriate time (e.g., after your page has loaded)
-window.onload = loadTensorFlowJS;
-
-  // Checks if the browser supports the necessary API for video capture
-  function hasGetUserMedia() {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-  }
-
-  // Tries to enable the camera
-function enableCam() {
-  if (hasGetUserMedia()) {
-    // Request camera permissions with proper mobile constraints
-    const constraints = {
-      video: { 
-        facingMode: 'user',  // Use front camera
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      }
-    };
-
-    // Show permission request status
-    STATUS.innerText = 'Requesting camera permission...';
-
-    navigator.mediaDevices.getUserMedia(constraints)
-      .then(function(stream) {
-        VIDEO.srcObject = stream;
-        VIDEO.addEventListener('loadeddata', function() {
-          videoPlaying = true;
-          ENABLE_CAM_BUTTON.classList.add('removed');
-          STATUS.innerText = 'Camera enabled successfully!';
-        });
-      })
-      .catch(function(error) {
-        console.error('Camera access denied:', error);
-        STATUS.innerText = 'Camera access denied. Please grant camera permissions in your browser settings.';
-        // Add a retry button if permission is denied
-        ENABLE_CAM_BUTTON.innerHTML = 'Retry Camera Access';
-        ENABLE_CAM_BUTTON.classList.remove('removed');
-      });
-  } else {
-    console.warn('getUserMedia() is not supported by your browser');
-    STATUS.innerText = 'Camera access not supported by your browser';
-  }
-}
-
-
-    
-
-</script>
 
   <script>
     const STATUS = document.getElementById('status');
-      const VIDEO = document.getElementById('webcam');
-      const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
-      const RESET_BUTTON = document.getElementById('reset');
-      const TRAIN_BUTTON = document.getElementById('train');
-      const MOBILE_NET_INPUT_WIDTH = 224;
-      const MOBILE_NET_INPUT_HEIGHT = 224;
-      const STOP_DATA_GATHER = -1;
-      const CLASS_NAMES = [];
-      const consoleLog = document.getElementById('console-log');
+    const VIDEO = document.getElementById('webcam');
+    const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
+    const RESET_BUTTON = document.getElementById('reset');
+    const TRAIN_BUTTON = document.getElementById('train');
+    const MOBILE_NET_INPUT_WIDTH = 224;
+    const MOBILE_NET_INPUT_HEIGHT = 224;
+    const STOP_DATA_GATHER = -1;
+    const CLASS_NAMES = [];
 
-      
-      ENABLE_CAM_BUTTON.addEventListener('click', enableCam);
-      TRAIN_BUTTON.addEventListener('click', trainAndPredict);
-      RESET_BUTTON.addEventListener('click', reset);
-      
-  
-      
-      function hasGetUserMedia() {
-        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    // Initialize variables
+    let mobilenet = undefined;
+    let gatherDataState = STOP_DATA_GATHER;
+    let videoPlaying = false;
+    let trainingDataInputs = [];
+    let trainingDataOutputs = [];
+    let examplesCount = [];
+    let predict = false;
+
+    // Setup event listeners
+    ENABLE_CAM_BUTTON.addEventListener('click', enableCam);
+    TRAIN_BUTTON.addEventListener('click', trainAndPredict);
+    RESET_BUTTON.addEventListener('click', reset);
+
+    // Setup data collector buttons
+    let dataCollectorButtons = document.querySelectorAll('button.dataCollector');
+    for (let i = 0; i < dataCollectorButtons.length; i++) {
+      dataCollectorButtons[i].addEventListener('touchstart', gatherDataForClass);
+      dataCollectorButtons[i].addEventListener('touchend', gatherDataForClass);
+      dataCollectorButtons[i].addEventListener('mousedown', gatherDataForClass);
+      dataCollectorButtons[i].addEventListener('mouseup', gatherDataForClass);
+      CLASS_NAMES.push(dataCollectorButtons[i].getAttribute('data-name'));
+    }
+
+    function hasGetUserMedia() {
+      return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    }
+
+    async function enableCam() {
+      if (!hasGetUserMedia()) {
+        STATUS.innerText = 'Camera access not supported by your browser';
+        return;
       }
-      
-      function trainAndPredict() {
-        async function trainAndPredict() {
-        predict = false;
-        tf.util.shuffleCombo(trainingDataInputs, trainingDataOutputs);
-        let outputsAsTensor = tf.tensor1d(trainingDataOutputs, 'int32');
-        let oneHotOutputs = tf.oneHot(outputsAsTensor, CLASS_NAMES.length);
-        let inputsAsTensor = tf.stack(trainingDataInputs);
+
+      STATUS.innerText = 'Requesting camera permission...';
+      ENABLE_CAM_BUTTON.disabled = true;
+
+      try {
+        const constraints = {
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        VIDEO.srcObject = stream;
         
-        let results = await model.fit(inputsAsTensor, oneHotOutputs, {shuffle: true, batchSize: 5, epochs: 10, 
-            callbacks: {onEpochEnd: logProgress} });
-        
-        outputsAsTensor.dispose();
-        oneHotOutputs.dispose();
-        inputsAsTensor.dispose();
-        predict = true;
-        predictLoop();
-      }
-      ////
-      function logProgress(epoch, logs) {
-        console.log('Data for epoch ' + epoch, logs);
-      }
-        // TODO: Fill this out later in the codelab!
-      }
-      
-      
-      
-      
-      let dataCollectorButtons = document.querySelectorAll('button.dataCollector');
-      for (let i = 0; i < dataCollectorButtons.length; i++) {
-        // Add touch events for mobile
-        dataCollectorButtons[i].addEventListener('touchstart', gatherDataForClass);
-        dataCollectorButtons[i].addEventListener('touchend', gatherDataForClass);
-        // Keep mouse events for desktop
-        dataCollectorButtons[i].addEventListener('mousedown', gatherDataForClass);
-        dataCollectorButtons[i].addEventListener('mouseup', gatherDataForClass);
-        // Populate the human readable names for classes
-        CLASS_NAMES.push(dataCollectorButtons[i].getAttribute('data-name'));
-      }
-      
-      
-      function gatherDataForClass(event) {
-        // Prevent default to avoid scrolling on mobile
-        event.preventDefault();
-        
-        let classNumber = parseInt(this.getAttribute('data-1hot'));
-        // Start collecting on press, stop on release
-        gatherDataState = (event.type === 'mousedown' || event.type === 'touchstart') ? classNumber : STOP_DATA_GATHER;
-        dataGatherLoop();
-      }
-      
-      let mobilenet = undefined;
-      let gatherDataState = STOP_DATA_GATHER;
-      let videoPlaying = false;
-      let trainingDataInputs = [];
-      let trainingDataOutputs = [];
-      let examplesCount = [];
-      let predict = false;
-      
-      /**
-       * Loads the MobileNet model and warms it up so ready for use.
-       **/
-      async function loadMobileNetFeatureModel() {
-        const URL = 
-          'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1';
-        
-        mobilenet = await tf.loadGraphModel(URL, {fromTFHub: true});
-        STATUS.innerText = 'MobileNet v3 loaded successfully!';
-        
-        // Warm up the model by passing zeros through it once.
-        tf.tidy(function () {
-          let answer = mobilenet.predict(tf.zeros([1, MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH, 3]));
-          console.log(answer.shape);
+        VIDEO.addEventListener('loadeddata', function() {
+          videoPlaying = true;
+          ENABLE_CAM_BUTTON.classList.add('d-none');
+          STATUS.innerText = 'Camera enabled - ready to gather data';
         });
+
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        STATUS.innerText = 'Camera access denied. Please check your browser settings.';
+        ENABLE_CAM_BUTTON.disabled = false;
+        ENABLE_CAM_BUTTON.innerText = 'Retry Camera Access';
       }
-      
-      // Call the function immediately to start loading.
-      loadMobileNetFeatureModel();
-      
-      let model = tf.sequential();
-      model.add(tf.layers.dense({inputShape: [1024], units: 128, activation: 'relu'}));
-      model.add(tf.layers.dense({units: CLASS_NAMES.length, activation: 'softmax'}));
-      
-      model.summary();
-      
-      // Compile the model with the defined optimizer and specify a loss function to use.
-      model.compile({
-        // Adam changes the learning rate over time which is useful.
-        optimizer: 'adam',
-        // Use the correct loss function. If 2 classes of data, must use binaryCrossentropy.
-        // Else categoricalCrossentropy is used if more than 2 classes.
-        loss: (CLASS_NAMES.length === 2) ? 'binaryCrossentropy': 'categoricalCrossentropy', 
-        // As this is a classification problem you can record accuracy in the logs too!
-        metrics: ['accuracy']  
-      });
-      
-      
-      
-      
-      /**
-       * Handle Data Gather for button mouseup/mousedown.
-       **/
-      function dataGatherLoop() {
-        if (videoPlaying && gatherDataState !== STOP_DATA_GATHER) {
-          let imageFeatures = tf.tidy(function() {
-            let videoFrameAsTensor = tf.browser.fromPixels(VIDEO);
-            let resizedTensorFrame = tf.image.resizeBilinear(videoFrameAsTensor, [MOBILE_NET_INPUT_HEIGHT, 
-                MOBILE_NET_INPUT_WIDTH], true);
-            let normalizedTensorFrame = resizedTensorFrame.div(255);
-            return mobilenet.predict(normalizedTensorFrame.expandDims()).squeeze();
-          });
-      
-          trainingDataInputs.push(imageFeatures);
-          trainingDataOutputs.push(gatherDataState);
-          
-          // Intialize array index element if currently undefined.
-          if (examplesCount[gatherDataState] === undefined) {
-            examplesCount[gatherDataState] = 0;
-          }
-          examplesCount[gatherDataState]++;
-      
-          STATUS.innerText = '';
-          for (let n = 0; n < CLASS_NAMES.length; n++) {
-            STATUS.innerText += CLASS_NAMES[n] + ' data count: ' + examplesCount[n] + '. ';
-          }
-          window.requestAnimationFrame(dataGatherLoop);
+    }
+
+    // Add mobile-specific styles
+    const mobileStyles = `
+      @media (max-width: 768px) {
+        #webcam {
+          width: 100%;
+          max-width: 640px;
+          height: auto;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
+
+        .btn {
+          padding: 15px;
+          font-size: 16px;
+          margin-bottom: 10px;
+        }
+
+        #status {
+          font-size: 14px;
+          padding: 10px;
+          background-color: #f8f9fa;
+          border-radius: 5px;
+          margin: 10px 0;
+        }
+
+        .container {
+          padding: 10px;
         }
       }
-      
-      function predictLoop() {
-        if (predict) {
-          tf.tidy(function() {
-            let videoFrameAsTensor = tf.browser.fromPixels(VIDEO).div(255);
-            let resizedTensorFrame = tf.image.resizeBilinear(videoFrameAsTensor,[MOBILE_NET_INPUT_HEIGHT, 
-                MOBILE_NET_INPUT_WIDTH], true);
-      
-            let imageFeatures = mobilenet.predict(resizedTensorFrame.expandDims());
-            let prediction = model.predict(imageFeatures).squeeze();
-            let highestIndex = prediction.argMax().arraySync();
-            let predictionArray = prediction.arraySync();
-      
-            STATUS.innerText = 'Prediction: ' + CLASS_NAMES[highestIndex] + ' with ' + Math.floor(predictionArray[highestIndex] * 100) + '% confidence';
-          });
-      
-          window.requestAnimationFrame(predictLoop);
-        }
-      }
-      
-      async function trainAndPredict() {
-        predict = false;
-        tf.util.shuffleCombo(trainingDataInputs, trainingDataOutputs);
-        let outputsAsTensor = tf.tensor1d(trainingDataOutputs, 'int32');
-        let oneHotOutputs = tf.oneHot(outputsAsTensor, CLASS_NAMES.length);
-        let inputsAsTensor = tf.stack(trainingDataInputs);
-        
-        let results = await model.fit(inputsAsTensor, oneHotOutputs, {shuffle: true, batchSize: 5, epochs: 10, 
-            callbacks: {onEpochEnd: logProgress} });
-        
-        outputsAsTensor.dispose();
-        oneHotOutputs.dispose();
-        inputsAsTensor.dispose();
-        predict = true;
-        predictLoop();
-      }
-      
-      function logProgress(epoch, logs) {
-        console.log('Data for epoch ' + epoch, logs);
-      }
-      function reset() {
-        predict = false;
-        examplesCount.length = 0;
-        for (let i = 0; i < trainingDataInputs.length; i++) {
-          trainingDataInputs[i].dispose();
-        }
-        trainingDataInputs.length = 0;
-        trainingDataOutputs.length = 0;
-        STATUS.innerText = 'No data collected';
-        
-        console.log('Tensors in memory: ' + tf.memory().numTensors);
-      }
+    `;
 
-      // Add mobile-specific styles for better camera handling
-      const mobileStyles = `
-        @media (max-width: 768px) {
-          .container {
-            padding: 10px;
-          }
-          
-          button {
-            width: 100%;
-            margin: 5px 0;
-            padding: 15px;
-            font-size: 16px;
-            touch-action: manipulation;
-          }
-          
-          #webcam {
-            width: 100%;
-            max-width: 640px;
-            height: auto;
-            transform: scaleX(-1); /* Mirror the video for front camera */
-          }
-          
-          .dataCollector {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.2s;
-          }
-          
-          .dataCollector:active {
-            background-color: #0056b3;
-          }
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = mobileStyles;
+    document.head.appendChild(styleSheet);
 
-          #status {
-            font-size: 14px;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-          }
-
-          #enableCam {
-            background-color: #28a745;
-            border-color: #28a745;
-          }
-
-          #enableCam:active {
-            background-color: #218838;
-            border-color: #1e7e34;
-          }
-        }
-      `;
-
-      // Add the styles to the document
-      const styleSheet = document.createElement("style");
-      styleSheet.textContent = mobileStyles;
-      document.head.appendChild(styleSheet);
-      </script>>
+    // Rest of your existing code...
+  </script>
 </main>
 <script src="/docs/5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
