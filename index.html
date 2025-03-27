@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en" data-bs-theme="auto">
   <head><script src="/docs/5.3/assets/js/color-modes.js"></script>
@@ -338,21 +337,28 @@ window.onload = loadTensorFlowJS;
   // Tries to enable the camera
 function enableCam() {
   if (hasGetUserMedia()) {
-    // Change facingMode to 'environment' to use the rear camera.
+    // Use front camera for mobile devices
     const constraints = {
-      video: { facingMode: 'environment', width: 840, height: 480 }
+      video: { 
+        facingMode: 'user',  // Use front camera
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      }
     };
 
     navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
       VIDEO.srcObject = stream;
       VIDEO.addEventListener('loadeddata', function() {
-        // Additional checks or actions once the video stream is available
+        videoPlaying = true;
+        ENABLE_CAM_BUTTON.classList.add('removed');
       });
     }).catch(function(error) {
       console.error('Camera access denied:', error);
+      STATUS.innerText = 'Error accessing camera. Please ensure camera permissions are granted.';
     });
   } else {
     console.warn('getUserMedia() is not supported by your browser');
+    STATUS.innerText = 'Camera access not supported by your browser';
   }
 }
 
@@ -384,28 +390,6 @@ function enableCam() {
         return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
       }
       
-      function enableCam() {
-        if (hasGetUserMedia()) {
-          // getUsermedia parameters.
-          const constraints = {
-            video: true,
-            width: 640, 
-            height: 480 
-          };
-      
-          // Activate the webcam stream.
-          navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-            VIDEO.srcObject = stream;
-            VIDEO.addEventListener('loadeddata', function() {
-              videoPlaying = true;
-              ENABLE_CAM_BUTTON.classList.add('removed');
-            });
-          });
-        } else {
-          console.warn('getUserMedia() is not supported by your browser');
-        }
-      }
-      //////
       function trainAndPredict() {
         async function trainAndPredict() {
         predict = false;
@@ -435,16 +419,24 @@ function enableCam() {
       
       let dataCollectorButtons = document.querySelectorAll('button.dataCollector');
       for (let i = 0; i < dataCollectorButtons.length; i++) {
+        // Add touch events for mobile
+        dataCollectorButtons[i].addEventListener('touchstart', gatherDataForClass);
+        dataCollectorButtons[i].addEventListener('touchend', gatherDataForClass);
+        // Keep mouse events for desktop
         dataCollectorButtons[i].addEventListener('mousedown', gatherDataForClass);
         dataCollectorButtons[i].addEventListener('mouseup', gatherDataForClass);
-        // Populate the human readable names for classes.
+        // Populate the human readable names for classes
         CLASS_NAMES.push(dataCollectorButtons[i].getAttribute('data-name'));
       }
       
       
-      function gatherDataForClass() {
+      function gatherDataForClass(event) {
+        // Prevent default to avoid scrolling on mobile
+        event.preventDefault();
+        
         let classNumber = parseInt(this.getAttribute('data-1hot'));
-        gatherDataState = (gatherDataState === STOP_DATA_GATHER) ? classNumber : STOP_DATA_GATHER;
+        // Start collecting on press, stop on release
+        gatherDataState = (event.type === 'mousedown' || event.type === 'touchstart') ? classNumber : STOP_DATA_GATHER;
         dataGatherLoop();
       }
       
@@ -499,11 +491,6 @@ function enableCam() {
       /**
        * Handle Data Gather for button mouseup/mousedown.
        **/
-      function gatherDataForClass() {
-        let classNumber = parseInt(this.getAttribute('data-1hot'));
-        gatherDataState = (gatherDataState === STOP_DATA_GATHER) ? classNumber : STOP_DATA_GATHER;
-        dataGatherLoop();
-      }
       function dataGatherLoop() {
         if (videoPlaying && gatherDataState !== STOP_DATA_GATHER) {
           let imageFeatures = tf.tidy(function() {
@@ -582,6 +569,46 @@ function enableCam() {
         
         console.log('Tensors in memory: ' + tf.memory().numTensors);
       }
+
+      // Add mobile-specific styles
+      const mobileStyles = `
+        @media (max-width: 768px) {
+          .container {
+            padding: 10px;
+          }
+          
+          button {
+            width: 100%;
+            margin: 5px 0;
+            padding: 15px;
+            font-size: 16px;
+            touch-action: manipulation;
+          }
+          
+          #webcam {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+          }
+          
+          .dataCollector {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+          }
+          
+          .dataCollector:active {
+            background-color: #0056b3;
+          }
+        }
+      `;
+
+      // Add the styles to the document
+      const styleSheet = document.createElement("style");
+      styleSheet.textContent = mobileStyles;
+      document.head.appendChild(styleSheet);
       </script>>
 </main>
 <script src="/docs/5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
