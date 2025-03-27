@@ -436,7 +436,8 @@
         // Create one-hot encoding for the class
         let classId = gatherDataState;
         let outputTensor = tf.tidy(function() {
-          let oneHot = tf.oneHot(classId, CLASS_NAMES.length);
+          // Create a one-hot encoding with shape [1, num_classes]
+          let oneHot = tf.oneHot(tf.tensor1d([classId], 'int32'), CLASS_NAMES.length);
           return oneHot;
         });
         
@@ -516,13 +517,28 @@
         let xs, ys;
         
         try {
-          // Directly concatenate the tensors - they should all be properly shaped already
-          xs = tf.concat(trainingDataInputs);
-          ys = tf.concat(trainingDataOutputs);
+          // Create consistent shapes for input and output tensors
+          // First concat all input tensors (already shaped properly)
+          xs = tf.concat(trainingDataInputs, 0);
+          
+          // For outputs, ensure they all have the right shape before concatenating
+          // This debugging step helps identify shape inconsistencies
+          let outputShapes = trainingDataOutputs.map(t => t.shape);
+          console.log('Output tensor shapes:', outputShapes);
+          
+          // Concat all output tensors
+          ys = tf.concat(trainingDataOutputs, 0);
+          
+          console.log('Final shapes - xs:', xs.shape, 'ys:', ys.shape);
           
           // Clear individual tensors to free memory
           trainingDataInputs.forEach(tensor => tensor.dispose());
           trainingDataOutputs.forEach(tensor => tensor.dispose());
+          
+          // Ensure output tensor has the correct shape by reshaping if needed
+          if (ys.shape[1] !== CLASS_NAMES.length) {
+            ys = ys.reshape([ys.shape[0], CLASS_NAMES.length]);
+          }
           
           // Start training with progress updates
           await model.fit(xs, ys, {
