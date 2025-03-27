@@ -210,6 +210,7 @@
 
         <div class="mt-4">
           <button id="enableCam" class="btn btn-success btn-lg w-100">Enable Webcam</button>
+          <button id="switchCam" class="btn btn-secondary btn-lg w-100 mt-2 d-none">Switch Camera</button>
         </div>
 
         <div class="mt-3 text-center">
@@ -232,6 +233,7 @@
     const STATUS = document.getElementById('status');
     const VIDEO = document.getElementById('webcam');
     const ENABLE_CAM_BUTTON = document.getElementById('enableCam');
+    const SWITCH_CAM_BUTTON = document.getElementById('switchCam');
     const RESET_BUTTON = document.getElementById('reset');
     const TRAIN_BUTTON = document.getElementById('train');
     const MOBILE_NET_INPUT_WIDTH = 224;
@@ -248,8 +250,13 @@
     let examplesCount = [];
     let predict = false;
 
+    // Camera state
+    let currentFacingMode = 'user';
+    let stream = null;
+
     // Setup event listeners
     ENABLE_CAM_BUTTON.addEventListener('click', enableCam);
+    SWITCH_CAM_BUTTON.addEventListener('click', switchCamera);
     TRAIN_BUTTON.addEventListener('click', trainAndPredict);
     RESET_BUTTON.addEventListener('click', reset);
 
@@ -279,18 +286,19 @@
       try {
         const constraints = {
           video: {
-            facingMode: 'user', // For selfie camera, use 'user', for back camera use 'environment'
+            facingMode: currentFacingMode,
             width: { ideal: 640 },
             height: { ideal: 480 }
           }
         };
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
         VIDEO.srcObject = stream;
         
         VIDEO.addEventListener('loadeddata', function() {
           videoPlaying = true;
           ENABLE_CAM_BUTTON.classList.add('d-none');
+          SWITCH_CAM_BUTTON.classList.remove('d-none');
           STATUS.innerText = 'Camera enabled - ready to gather data';
         });
 
@@ -299,6 +307,39 @@
         STATUS.innerText = 'Camera access denied. Please check your browser settings.';
         ENABLE_CAM_BUTTON.disabled = false;
         ENABLE_CAM_BUTTON.innerText = 'Retry Camera Access';
+      }
+    }
+
+    async function switchCamera() {
+      if (!videoPlaying) return;
+      
+      // Stop all tracks from the current stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Toggle facing mode
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      
+      try {
+        STATUS.innerText = 'Switching camera...';
+        
+        // Request the new camera stream
+        const constraints = {
+          video: {
+            facingMode: currentFacingMode,
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        VIDEO.srcObject = stream;
+        
+        STATUS.innerText = `Camera switched to ${currentFacingMode === 'user' ? 'front' : 'back'} camera`;
+      } catch (error) {
+        console.error('Error switching camera:', error);
+        STATUS.innerText = `Failed to switch camera: ${error.message}`;
       }
     }
 
