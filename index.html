@@ -337,7 +337,7 @@ window.onload = loadTensorFlowJS;
   // Tries to enable the camera
 function enableCam() {
   if (hasGetUserMedia()) {
-    // Use front camera for mobile devices
+    // Request camera permissions with proper mobile constraints
     const constraints = {
       video: { 
         facingMode: 'user',  // Use front camera
@@ -346,16 +346,25 @@ function enableCam() {
       }
     };
 
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-      VIDEO.srcObject = stream;
-      VIDEO.addEventListener('loadeddata', function() {
-        videoPlaying = true;
-        ENABLE_CAM_BUTTON.classList.add('removed');
+    // Show permission request status
+    STATUS.innerText = 'Requesting camera permission...';
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(stream) {
+        VIDEO.srcObject = stream;
+        VIDEO.addEventListener('loadeddata', function() {
+          videoPlaying = true;
+          ENABLE_CAM_BUTTON.classList.add('removed');
+          STATUS.innerText = 'Camera enabled successfully!';
+        });
+      })
+      .catch(function(error) {
+        console.error('Camera access denied:', error);
+        STATUS.innerText = 'Camera access denied. Please grant camera permissions in your browser settings.';
+        // Add a retry button if permission is denied
+        ENABLE_CAM_BUTTON.innerHTML = 'Retry Camera Access';
+        ENABLE_CAM_BUTTON.classList.remove('removed');
       });
-    }).catch(function(error) {
-      console.error('Camera access denied:', error);
-      STATUS.innerText = 'Error accessing camera. Please ensure camera permissions are granted.';
-    });
   } else {
     console.warn('getUserMedia() is not supported by your browser');
     STATUS.innerText = 'Camera access not supported by your browser';
@@ -570,7 +579,7 @@ function enableCam() {
         console.log('Tensors in memory: ' + tf.memory().numTensors);
       }
 
-      // Add mobile-specific styles
+      // Add mobile-specific styles for better camera handling
       const mobileStyles = `
         @media (max-width: 768px) {
           .container {
@@ -589,6 +598,7 @@ function enableCam() {
             width: 100%;
             max-width: 640px;
             height: auto;
+            transform: scaleX(-1); /* Mirror the video for front camera */
           }
           
           .dataCollector {
@@ -601,6 +611,24 @@ function enableCam() {
           
           .dataCollector:active {
             background-color: #0056b3;
+          }
+
+          #status {
+            font-size: 14px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+          }
+
+          #enableCam {
+            background-color: #28a745;
+            border-color: #28a745;
+          }
+
+          #enableCam:active {
+            background-color: #218838;
+            border-color: #1e7e34;
           }
         }
       `;
