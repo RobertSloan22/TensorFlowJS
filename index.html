@@ -424,10 +424,10 @@
           );
           let normalizedTensorFrame = resizedTensorFrame.div(255);
           
-          // Cache the flattened shape to ensure consistency
-          window.INPUT_TENSOR_SIZE = MOBILE_NET_INPUT_HEIGHT * MOBILE_NET_INPUT_WIDTH * 3;
+          // Flatten the tensor immediately to ensure consistent shape
+          let flattenedTensor = normalizedTensorFrame.reshape([1, MOBILE_NET_INPUT_HEIGHT * MOBILE_NET_INPUT_WIDTH * 3]);
           
-          return normalizedTensorFrame;
+          return flattenedTensor;
         });
         
         // Store data
@@ -480,18 +480,17 @@
       const epochs = isMobile ? 8 : 10;
       
       try {
-        // Determine the exact input shape from the first training example
-        let sampleTensor = trainingDataInputs[0];
-        let inputShape = sampleTensor.flatten().shape[0];
+        // Get expected input shape from the first training example
+        const expectedInputShape = MOBILE_NET_INPUT_HEIGHT * MOBILE_NET_INPUT_WIDTH * 3;
         
-        STATUS.innerText = `Preparing model for input shape: ${inputShape}`;
+        STATUS.innerText = `Preparing model for input shape: ${expectedInputShape}`;
         
         // Create and train the model
         let model = tf.sequential();
         
         // Use a more mobile-friendly architecture
         model.add(tf.layers.dense({
-          inputShape: [inputShape], // Dynamic shape from actual data
+          inputShape: [expectedInputShape],
           units: isMobile ? 64 : 100, // Smaller network for mobile
           activation: 'relu'
         }));
@@ -517,26 +516,13 @@
         let xs, ys;
         
         try {
-          // Process each tensor one by one to ensure consistent shape
-          let processedTensors = [];
-          for (let i = 0; i < trainingDataInputs.length; i++) {
-            const tensor = trainingDataInputs[i];
-            const flatTensor = tf.tidy(() => tensor.reshape([1, inputShape]));
-            processedTensors.push(flatTensor);
-          }
-          
-          xs = tf.concat(processedTensors, 0); // Concat along the batch dimension
+          // Directly concatenate the tensors - they should all be properly shaped already
+          xs = tf.concat(trainingDataInputs);
           ys = tf.concat(trainingDataOutputs);
-          
-          // Clean up processed tensors
-          processedTensors.forEach(t => t.dispose());
           
           // Clear individual tensors to free memory
           trainingDataInputs.forEach(tensor => tensor.dispose());
           trainingDataOutputs.forEach(tensor => tensor.dispose());
-          
-          // No need to reshape as we've already done it
-          // xs = xs.reshape([xs.shape[0], -1]);
           
           // Start training with progress updates
           await model.fit(xs, ys, {
@@ -557,9 +543,6 @@
           
           STATUS.innerText = 'Model trained! Predicting...';
           TRAIN_BUTTON.disabled = false;
-          
-          // Save the input shape for prediction
-          window.MODEL_INPUT_SHAPE = inputShape;
           
           // Start predicting
           predict = true;
@@ -595,9 +578,8 @@
         );
         let normalizedTensorFrame = resizedTensorFrame.div(255);
         
-        // Reshape using the same shape as training
-        let inputShape = window.MODEL_INPUT_SHAPE || normalizedTensorFrame.flatten().shape[0];
-        let reshapedImage = normalizedTensorFrame.reshape([1, inputShape]);
+        // Flatten the tensor in the same way as during training
+        let reshapedImage = normalizedTensorFrame.reshape([1, MOBILE_NET_INPUT_HEIGHT * MOBILE_NET_INPUT_WIDTH * 3]);
         
         // Make prediction
         let prediction = model.predict(reshapedImage);
