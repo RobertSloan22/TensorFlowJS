@@ -146,6 +146,38 @@
       }
     </style>
 
+    // Add mobile-specific styles
+    <style>
+      @media (max-width: 768px) {
+        #webcam {
+          width: 100%;
+          max-width: 640px;
+          height: auto;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
+
+        .btn {
+          padding: 15px;
+          font-size: 16px;
+          margin-bottom: 10px;
+          touch-action: manipulation;
+        }
+
+        #status {
+          font-size: 14px;
+          padding: 10px;
+          background-color: #f8f9fa;
+          border-radius: 5px;
+          margin: 10px 0;
+        }
+
+        .container {
+          padding: 10px;
+        }
+      }
+    </style>
+
     
   </head>
   <body>
@@ -165,31 +197,29 @@
       <div class="container-fluid py-5">
         <h1 class="display-5 fw-bold">TensorFlow.js Transfer Learning Demo: Robert Sloan</h1>
         
+        <h2>Deep Neural Network In the Browser</h2>   
+
+        <div class="d-flex align-items-center" id="status">
+          <strong role="status">Awaiting TF.js load</strong>
+          <div class="spinner-border ms-auto" id="loadingIndicator" style="visibility: visible;" role="status" aria-hidden="false"></div>
+        </div>
    
-    <h2>Deep Neural Network In the Browser</h2>   
+        <div id="container" class="mt-4">
+          <video id="webcam" autoplay muted playsinline></video>
+        </div>
 
-<div class="d-flex align-items-center" id="status">
-  <strong role="status">Awaiting TF.js load</strong>
-  <div class="spinner-border ms-auto" id="loadingIndicator" style="visibility: visible;" role="status" aria-hidden="false"></div>
-</div>
-   
-<div id="container" class="mt-4">
-  <video id="webcam" autoplay muted playsinline></video>
-</div>
+        <div class="mt-4">
+          <button id="enableCam" class="btn btn-success btn-lg w-100">Enable Webcam</button>
+        </div>
 
-<div class="mt-4">
-  <button id="enableCam" class="btn btn-success btn-lg w-100">Enable Webcam</button>
-</div>
+        <div class="mt-3 text-center">
+          <button class="dataCollector btn btn-primary btn-lg w-100 mb-3" data-1hot="0" data-name="Class 1">Gather Class 1 Data</button>
+          <button class="dataCollector btn btn-primary btn-lg w-100 mb-3" data-1hot="1" data-name="Class 2">Gather Class 2 Data</button>
+          <button id="train" class="btn btn-warning btn-lg w-100 mb-3">Train &amp; Predict!</button>
+          <button id="reset" class="btn btn-danger btn-lg w-100">Reset</button>
+        </div>
 
-<div class="mt-3 text-center">
-  <button class="dataCollector btn btn-primary btn-lg w-100 mb-3" data-1hot="0" data-name="Class 1">Gather Class 1 Data</button>
-  <button class="dataCollector btn btn-primary btn-lg w-100 mb-3" data-1hot="1" data-name="Class 2">Gather Class 2 Data</button>
-  <button id="train" class="btn btn-warning btn-lg w-100 mb-3">Train &amp; Predict!</button>
-  <button id="reset" class="btn btn-danger btn-lg w-100">Reset</button>
-</div>
-
-<p class="mt-4 text-muted">Training takes 10-15 seconds. Hold down the gather buttons to collect data.</p>
-
+        <p class="mt-4 text-muted">Training takes 10-15 seconds. Hold down the gather buttons to collect data.</p>
       </div>
     </div>
 
@@ -249,7 +279,7 @@
       try {
         const constraints = {
           video: {
-            facingMode: 'environment',
+            facingMode: 'user', // For selfie camera, use 'user', for back camera use 'environment'
             width: { ideal: 640 },
             height: { ideal: 480 }
           }
@@ -287,6 +317,7 @@
           padding: 15px;
           font-size: 16px;
           margin-bottom: 10px;
+          touch-action: manipulation;
         }
 
         #status {
@@ -307,7 +338,190 @@
     styleSheet.textContent = mobileStyles;
     document.head.appendChild(styleSheet);
 
-    // Rest of your existing code...
+    // Function to gather data for the different classes
+    function gatherDataForClass() {
+      let classId = parseInt(this.getAttribute('data-1hot'));
+      let className = this.getAttribute('data-name');
+      
+      if (videoPlaying) {
+        if (gatherDataState === STOP_DATA_GATHER) {
+          gatherDataState = classId;
+          this.innerText = `Gathering for ${className}`;
+          this.classList.remove('btn-primary');
+          this.classList.add('btn-danger');
+          
+          // Initialize counts if needed
+          if (!examplesCount[classId]) {
+            examplesCount[classId] = 0;
+          }
+          
+          // Start the image capture process
+          setTimeout(function() {
+            captureFrame();
+          }, 100);
+          
+        } else {
+          gatherDataState = STOP_DATA_GATHER;
+          this.innerText = `Gather ${className} Data`;
+          this.classList.remove('btn-danger');
+          this.classList.add('btn-primary');
+        }
+      } else {
+        STATUS.innerText = 'Please enable the webcam first';
+      }
+    }
+
+    // Capture image data from the webcam
+    function captureFrame() {
+      if (gatherDataState !== STOP_DATA_GATHER && videoPlaying) {
+        // Get the tensor representation of the webcam image
+        let imageFeatures = tf.tidy(function() {
+          let videoFrameAsTensor = tf.browser.fromPixels(VIDEO);
+          let resizedTensorFrame = tf.image.resizeBilinear(
+            videoFrameAsTensor, 
+            [MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH]
+          );
+          let normalizedTensorFrame = resizedTensorFrame.div(255);
+          return normalizedTensorFrame;
+        });
+        
+        // Store data
+        trainingDataInputs.push(imageFeatures);
+        
+        // Create one-hot encoding for the class
+        let classId = gatherDataState;
+        let outputTensor = tf.tidy(function() {
+          let oneHot = tf.oneHot(classId, CLASS_NAMES.length);
+          return oneHot;
+        });
+        
+        trainingDataOutputs.push(outputTensor);
+        
+        // Update counts and UI
+        if (!examplesCount[classId]) {
+          examplesCount[classId] = 0;
+        }
+        examplesCount[classId]++;
+        
+        STATUS.innerText = `Class ${CLASS_NAMES[classId]} data count: ${examplesCount[classId]}`;
+        
+        // Collect more data after a short delay
+        setTimeout(function() {
+          captureFrame();
+        }, 100);
+      }
+    }
+
+    // Train the model and then start predicting
+    async function trainAndPredict() {
+      if (trainingDataInputs.length === 0) {
+        STATUS.innerText = 'Please collect data for at least two classes first';
+        return;
+      }
+      
+      STATUS.innerText = 'Training model...';
+      TRAIN_BUTTON.disabled = true;
+      
+      // Create and train the model
+      let model = tf.sequential();
+      
+      model.add(tf.layers.dense({
+        inputShape: [MOBILE_NET_INPUT_HEIGHT * MOBILE_NET_INPUT_WIDTH * 3], // RGB image
+        units: 100,
+        activation: 'relu'
+      }));
+      
+      model.add(tf.layers.dense({
+        units: CLASS_NAMES.length,
+        activation: 'softmax'
+      }));
+      
+      model.compile({
+        optimizer: tf.train.adam(0.0001),
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy']
+      });
+      
+      // Convert data tensors to a single tensor
+      let xs = tf.concat(trainingDataInputs);
+      let ys = tf.concat(trainingDataOutputs);
+      
+      // Reshape inputs to fit the model
+      xs = xs.reshape([xs.shape[0], -1]);
+      
+      // Start training
+      await model.fit(xs, ys, {
+        epochs: 10,
+        callbacks: {
+          onEpochEnd: (epoch, logs) => {
+            STATUS.innerText = `Training... Epoch ${epoch+1}, Accuracy: ${logs.acc.toFixed(3)}`;
+          }
+        }
+      });
+      
+      STATUS.innerText = 'Model trained! Predicting...';
+      TRAIN_BUTTON.disabled = false;
+      
+      // Start predicting
+      predict = true;
+      predictLoop(model, xs);
+    }
+
+    // Prediction loop
+    function predictLoop(model, xs) {
+      if (!predict || !videoPlaying) return;
+      
+      tf.tidy(function() {
+        // Get current frame as a tensor
+        let imageFeatures = tf.browser.fromPixels(VIDEO);
+        let resizedTensorFrame = tf.image.resizeBilinear(
+          imageFeatures, 
+          [MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH]
+        );
+        let normalizedTensorFrame = resizedTensorFrame.div(255);
+        
+        // Reshape the tensor to match model input
+        let reshapedImage = normalizedTensorFrame.reshape([1, -1]);
+        
+        // Make prediction
+        let prediction = model.predict(reshapedImage);
+        let classIdx = prediction.argMax(1).dataSync()[0];
+        let confidence = prediction.max().dataSync()[0];
+        
+        STATUS.innerText = `Prediction: ${CLASS_NAMES[classIdx]} (${(confidence * 100).toFixed(2)}%)`;
+      });
+      
+      // Schedule next prediction
+      setTimeout(function() {
+        predictLoop(model, xs);
+      }, 200);
+    }
+
+    // Reset the model and data
+    function reset() {
+      trainingDataInputs = [];
+      trainingDataOutputs = [];
+      examplesCount = [];
+      predict = false;
+      
+      STATUS.innerText = 'Model and data reset. Ready to collect new samples.';
+      
+      // Reset button states
+      TRAIN_BUTTON.disabled = false;
+      dataCollectorButtons.forEach(btn => {
+        btn.innerText = `Gather ${btn.getAttribute('data-name')} Data`;
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-primary');
+      });
+    }
+
+    // Check if TensorFlow.js is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      if (tf) {
+        document.getElementById('loadingIndicator').style.visibility = 'hidden';
+        STATUS.innerText = 'TensorFlow.js loaded successfully. Click "Enable Webcam" to start.';
+      }
+    });
   </script>
 </main>
 <script src="/docs/5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
